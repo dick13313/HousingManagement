@@ -12,6 +12,7 @@
       <nav class="nav">
         <NuxtLink
           v-for="item in navItems"
+          v-show="!item.adminOnly || currentRole === 'admin'"
           :key="item.to"
           class="nav-item"
           active-class="active"
@@ -56,10 +57,31 @@ const navItems = [
   { to: '/leases', label: '租約', icon: '約' },
   { to: '/rent', label: '收租', icon: '收' },
   { to: '/payments', label: '付款', icon: '付' },
-  { to: '/reminders', label: '提醒', icon: '鈴' }
+  { to: '/reports', label: '報表', icon: '表' },
+  { to: '/reminders', label: '提醒', icon: '鈴' },
+  { to: '/accounts', label: '帳號', icon: '權', adminOnly: true }
 ]
 
 const { user, loadUser, signOut } = useAuth()
+const { client } = useSupabaseClientLite()
+const currentRole = ref('')
 
-onMounted(loadUser)
+async function loadCurrentRole() {
+  await loadUser()
+
+  if (!client || !user.value) {
+    currentRole.value = ''
+    return
+  }
+
+  const { data } = await client
+    .from('profiles')
+    .select('role')
+    .eq('id', user.value.id)
+    .single()
+
+  currentRole.value = data?.role || ''
+}
+
+onMounted(loadCurrentRole)
 </script>

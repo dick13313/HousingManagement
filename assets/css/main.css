@@ -247,6 +247,10 @@ input::placeholder {
   color-scheme: dark;
 }
 
+.year-input {
+  width: 120px;
+}
+
 .primary-link,
 .quick-button {
   display: inline-flex;
@@ -418,6 +422,7 @@ h2 {
   font-weight: 700;
 }
 
+.filter-field input,
 .filter-field select {
   min-height: 42px;
   border: 1px solid var(--line);
@@ -452,6 +457,10 @@ table {
 
 .rent-table {
   min-width: 880px;
+}
+
+.report-table {
+  min-width: 1280px;
 }
 
 .rent-table td:first-child,
@@ -577,6 +586,11 @@ td span {
 .notice-link {
   width: fit-content;
   margin-top: 6px;
+}
+
+.account-note {
+  grid-column: 1 / -1;
+  margin-bottom: 0;
 }
 
 .auth-page {

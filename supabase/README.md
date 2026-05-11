@@ -23,11 +23,12 @@
 
 `migrations/0005_auth_profile_trigger.sql` 會在使用者註冊時自動建立 owner profile。管理者角色需由已授權人員明確指定。
 
+`migrations/0008_account_management.sql` 會將使用者 email 同步到 `profiles`，並限制只有 `admin` 可以更新帳號角色與屋主綁定。
+
 ## 後續規劃
 
 接下來應補上：
 
-- Auth 使用者與屋主或管理者角色關聯
 - Row Level Security policies
 - 每月帳款產生 function
 - 未繳租金每日檢查 function
