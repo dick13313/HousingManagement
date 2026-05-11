@@ -26,7 +26,7 @@ Workflow 檔案位於 `.github/workflows/netlify-deploy.yml`，流程如下：
 
 1. Checkout 專案
 2. 安裝 Node.js 22
-3. 執行 `npm ci`
+3. 執行 `npm install`
 4. 使用 Supabase public runtime secrets 執行 `npm run build`
 5. 使用 Netlify CLI 將 `.output/public` 發布到 Netlify production
 
