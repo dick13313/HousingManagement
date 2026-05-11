@@ -31,6 +31,9 @@ Workflow 檔案位於 `.github/workflows/netlify-deploy.yml`，流程如下：
 5. 使用 Supabase public runtime secrets 執行 `npm run generate`
 6. 使用 Netlify CLI 將 `.output/public` 發布到 Netlify production
 
+靜態發布時沒有 Nuxt server runtime，因此 `nuxt.config.ts` 會在 `generate` 當下讀取
+`NUXT_PUBLIC_SUPABASE_URL` 與 `NUXT_PUBLIC_SUPABASE_KEY`，並把 public 設定序列化到前端輸出。
+
 ## Netlify 設定
 
 `netlify.toml` 目前設定：
