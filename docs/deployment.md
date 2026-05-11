@@ -34,6 +34,10 @@ Workflow 檔案位於 `.github/workflows/netlify-deploy.yml`，流程如下：
 靜態發布時沒有 Nuxt server runtime，因此 `nuxt.config.ts` 會在 `generate` 當下讀取
 `NUXT_PUBLIC_SUPABASE_URL` 與 `NUXT_PUBLIC_SUPABASE_KEY`，並把 public 設定序列化到前端輸出。
 
+GitHub Actions 的部署步驟會使用 `netlify deploy --no-build`，只上傳前一步已完成的
+`.output/public`。這樣可以避免 Netlify CLI 讀取 `netlify.toml` 後重新執行一次 build，
+導致第二次 build 沒有帶入 GitHub Secrets。
+
 ## Netlify 設定
 
 `netlify.toml` 目前設定：

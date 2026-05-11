@@ -47,7 +47,7 @@ jobs:
           NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
       - name: Deploy to Netlify
-        run: npx --yes netlify-cli deploy --prod --dir=.output/public --site="$NETLIFY_SITE_ID" --message="Deploy $GITHUB_SHA"
+        run: npx --yes netlify-cli deploy --prod --no-build --dir=.output/public --site="$NETLIFY_SITE_ID" --message="Deploy $GITHUB_SHA"
         env:
           NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
           NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
