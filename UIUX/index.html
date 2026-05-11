@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>房租管理系統 UI 參考</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主要導覽">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true">租</div>
+          <div>
+            <strong>房租管理</strong>
+            <span>Landlord Console</span>
+          </div>
+        </div>
+
+        <nav class="nav">
+          <a class="nav-item active" href="#">
+            <span class="nav-icon" aria-hidden="true">⌂</span>
+            首頁
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon" aria-hidden="true">人</span>
+            屋主
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon" aria-hidden="true">房</span>
+            房屋
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon" aria-hidden="true">客</span>
+            租客
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon" aria-hidden="true">收</span>
+            收租
+          </a>
+          <a class="nav-item" href="#">
+            <span class="nav-icon" aria-hidden="true">鈴</span>
+            提醒
+          </a>
+        </nav>
+      </aside>
+
+      <main class="main">
+        <header class="topbar">
+          <div class="search">
+            <span aria-hidden="true">⌕</span>
+            <input type="search" placeholder="搜尋租客或房號" />
+          </div>
+          <div class="topbar-actions">
+            <button class="icon-button" type="button" aria-label="上一個月">‹</button>
+            <button class="month-button" type="button">2026 年 5 月</button>
+            <button class="icon-button" type="button" aria-label="下一個月">›</button>
+            <button class="user-button" type="button">管理者</button>
+          </div>
+        </header>
+
+        <section class="page-heading">
+          <div>
+            <p class="eyebrow">本月收租</p>
+            <h1>今天要處理的房租</h1>
+          </div>
+          <div class="heading-actions">
+            <button class="primary-button" type="button">登錄付款</button>
+          </div>
+        </section>
+
+        <section class="metrics-grid" aria-label="本月摘要">
+          <article class="metric">
+            <span>本月應收</span>
+            <strong>NT$ 486,000</strong>
+            <small>全部租金總額</small>
+          </article>
+          <article class="metric success">
+            <span>本月已收</span>
+            <strong>NT$ 392,000</strong>
+            <small>已收到的金額</small>
+          </article>
+          <article class="metric danger">
+            <span>未收金額</span>
+            <strong>NT$ 94,000</strong>
+            <small>9 位租客未繳</small>
+          </article>
+        </section>
+
+        <section class="content-grid">
+          <div class="panel wide">
+            <div class="panel-header">
+              <div>
+                <h2>未繳租客</h2>
+                <p>先處理這張清單即可</p>
+              </div>
+              <div class="filter-row">
+                <button class="filter" type="button">未繳</button>
+                <button class="filter active" type="button">逾期</button>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>租客</th>
+                    <th>房屋</th>
+                    <th class="amount">應繳</th>
+                    <th>到期日</th>
+                    <th>狀態</th>
+                    <th>操作</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>
+                      <strong>林品妤</strong>
+                      <span>0912-345-678</span>
+                    </td>
+                    <td>青田居 A 棟 8F-2</td>
+                    <td class="amount">NT$ 18,000</td>
+                    <td>05/05</td>
+                    <td><span class="status danger">逾期</span></td>
+                    <td><button class="text-button" type="button">提醒</button></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>黃柏翰</strong>
+                      <span>bank transfer pending</span>
+                    </td>
+                    <td>河岸首席 B 棟 12F-6</td>
+                    <td class="amount">NT$ 22,000</td>
+                    <td>05/10</td>
+                    <td><span class="status warning">部分繳</span></td>
+                    <td><button class="text-button" type="button">登錄</button></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>張以辰</strong>
+                      <span>LINE 已綁定</span>
+                    </td>
+                    <td>森學苑 3F-1</td>
+                    <td class="amount">NT$ 16,000</td>
+                    <td>05/10</td>
+                    <td><span class="status muted">未繳</span></td>
+                    <td><button class="text-button" type="button">提醒</button></td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <strong>王珮君</strong>
+                      <span>已完成轉帳</span>
+                    </td>
+                    <td>光廊寓所 5F-5</td>
+                    <td class="amount">NT$ 20,000</td>
+                    <td>05/05</td>
+                    <td><span class="status success">已繳</span></td>
+                    <td><button class="text-button" type="button">明細</button></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <aside class="panel side-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2>快速操作</h2>
+                <p>常用功能放在這裡</p>
+              </div>
+            </div>
+
+            <div class="quick-actions">
+              <button class="quick-button primary" type="button">登錄付款</button>
+              <button class="quick-button" type="button">提醒未繳租客</button>
+              <button class="quick-button" type="button">新增租客</button>
+            </div>
+
+            <div class="mini-chart" aria-label="收款率視覺化">
+              <div class="chart-ring">
+                <span>81%</span>
+              </div>
+              <div>
+                <strong>已收 81%</strong>
+                <p>剩下 9 位租客未繳</p>
+              </div>
+            </div>
+          </aside>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
