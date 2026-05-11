@@ -1,0 +1,43 @@
+# CI/CD 自動發布設定
+
+本專案使用 GitHub Actions 將 `master` 分支自動打包並發布到 Netlify。
+
+## 觸發條件
+
+- Push 到 `master` 分支時自動執行
+- 也可以在 GitHub Actions 頁面手動執行 `Deploy to Netlify`
+
+## GitHub Secrets
+
+請在 GitHub Repository 的 `Settings -> Secrets and variables -> Actions` 新增以下 secrets：
+
+| Secret | 說明 |
+| --- | --- |
+| `NETLIFY_AUTH_TOKEN` | Netlify Personal access token |
+| `NETLIFY_SITE_ID` | Netlify Site ID |
+| `SUPABASE_URL` | Supabase Project URL |
+| `SUPABASE_KEY` | Supabase publishable key / anon public key |
+
+不要將以上值寫入程式碼或 commit 到 Git。
+
+## 發布流程
+
+Workflow 檔案位於 `.github/workflows/netlify-deploy.yml`，流程如下：
+
+1. Checkout 專案
+2. 安裝 Node.js 22
+3. 執行 `npm ci`
+4. 使用 Supabase public runtime secrets 執行 `npm run build`
+5. 使用 Netlify CLI 將 `.output/public` 發布到 Netlify production
+
+## Netlify 設定
+
+`netlify.toml` 目前設定：
+
+```toml
+[build]
+  command = "npm run build"
+  publish = ".output/public"
+```
+
+若未來改成 Nuxt SSR 或 server functions，需重新檢查 Nuxt Nitro preset 與 Netlify 發布目錄。
