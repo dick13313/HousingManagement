@@ -28,11 +28,23 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Validate required secrets
+        run: |
+          test -n "$NUXT_PUBLIC_SUPABASE_URL" || (echo "Missing SUPABASE_URL secret" && exit 1)
+          test -n "$NUXT_PUBLIC_SUPABASE_KEY" || (echo "Missing SUPABASE_KEY secret" && exit 1)
+          test -n "$NETLIFY_AUTH_TOKEN" || (echo "Missing NETLIFY_AUTH_TOKEN secret" && exit 1)
+          test -n "$NETLIFY_SITE_ID" || (echo "Missing NETLIFY_SITE_ID secret" && exit 1)
+        env:
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+
       - name: Generate Nuxt static site
         run: npm run generate
         env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          NUXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          NUXT_PUBLIC_SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
 
       - name: Deploy to Netlify
         run: npx --yes netlify-cli deploy --prod --dir=.output/public --site="$NETLIFY_SITE_ID" --message="Deploy $GITHUB_SHA"

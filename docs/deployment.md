@@ -15,8 +15,8 @@
 | --- | --- |
 | `NETLIFY_AUTH_TOKEN` | Netlify Personal access token |
 | `NETLIFY_SITE_ID` | Netlify Site ID |
-| `SUPABASE_URL` | Supabase Project URL |
-| `SUPABASE_KEY` | Supabase publishable key / anon public key |
+| `SUPABASE_URL` | Supabase Project URL，workflow 會映射為 `NUXT_PUBLIC_SUPABASE_URL` |
+| `SUPABASE_KEY` | Supabase publishable key / anon public key，workflow 會映射為 `NUXT_PUBLIC_SUPABASE_KEY` |
 
 不要將以上值寫入程式碼或 commit 到 Git。
 
@@ -27,8 +27,9 @@ Workflow 檔案位於 `.github/workflows/netlify-deploy.yml`，流程如下：
 1. Checkout 專案
 2. 安裝 Node.js 22
 3. 執行 `npm install`
-4. 使用 Supabase public runtime secrets 執行 `npm run generate`
-5. 使用 Netlify CLI 將 `.output/public` 發布到 Netlify production
+4. 檢查必要 GitHub Secrets 是否存在
+5. 使用 Supabase public runtime secrets 執行 `npm run generate`
+6. 使用 Netlify CLI 將 `.output/public` 發布到 Netlify production
 
 ## Netlify 設定
 
