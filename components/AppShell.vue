@@ -1,6 +1,6 @@
 <template>
   <div class="app-shell">
-    <aside class="sidebar" aria-label="主要導覽">
+    <aside class="sidebar desktop-sidebar" aria-label="主要導覽">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">租</div>
         <div>
@@ -44,6 +44,53 @@
 
       <slot />
     </main>
+
+    <nav class="mobile-tabbar" aria-label="手機主要導覽">
+      <NuxtLink
+        v-for="item in mobilePrimaryItems"
+        :key="item.to"
+        class="mobile-tab"
+        active-class="active"
+        :to="item.to"
+        @click="showMobileMore = false"
+      >
+        <span class="mobile-tab-icon" aria-hidden="true">{{ item.icon }}</span>
+        <span>{{ item.label }}</span>
+      </NuxtLink>
+
+      <button class="mobile-tab" type="button" :class="{ active: showMobileMore }" @click="showMobileMore = !showMobileMore">
+        <span class="mobile-tab-icon" aria-hidden="true">⋯</span>
+        <span>更多</span>
+      </button>
+    </nav>
+
+    <Teleport to="body">
+      <div v-if="showMobileMore" class="mobile-menu-backdrop" @click.self="showMobileMore = false">
+        <section class="mobile-menu-panel" aria-label="更多功能">
+          <div class="mobile-menu-header">
+            <div>
+              <strong>更多功能</strong>
+              <span>選擇要前往的管理頁面</span>
+            </div>
+            <button class="icon-button" type="button" @click="showMobileMore = false">×</button>
+          </div>
+
+          <div class="mobile-menu-grid">
+            <NuxtLink
+              v-for="item in mobileMoreItems"
+              :key="item.to"
+              class="mobile-menu-item"
+              active-class="active"
+              :to="item.to"
+              @click="showMobileMore = false"
+            >
+              <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
+              {{ item.label }}
+            </NuxtLink>
+          </div>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -65,6 +112,21 @@ const navItems = [
 const { user, loadUser, signOut } = useAuth()
 const { client } = useSupabaseClientLite()
 const currentRole = ref('')
+const showMobileMore = ref(false)
+
+const availableNavItems = computed(() => {
+  return navItems.filter((item) => !item.adminOnly || currentRole.value === 'admin')
+})
+
+const mobilePrimaryRoutes = ['/', '/rent', '/properties', '/tenants', '/reports']
+
+const mobilePrimaryItems = computed(() => {
+  return availableNavItems.value.filter((item) => mobilePrimaryRoutes.includes(item.to))
+})
+
+const mobileMoreItems = computed(() => {
+  return availableNavItems.value.filter((item) => !mobilePrimaryRoutes.includes(item.to))
+})
 
 async function loadCurrentRole() {
   await loadUser()
