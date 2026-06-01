@@ -26,6 +26,19 @@ const fields = computed<FormField[]>(() => [
   { key: 'deposit', label: '押金', type: 'number', valueType: 'number' },
   { key: 'rent_due_day', label: '每月繳租日', type: 'number', valueType: 'number', required: true },
   {
+    key: 'payment_cycle_months',
+    label: '預設繳租週期',
+    type: 'select',
+    valueType: 'number',
+    required: true,
+    options: [
+      { label: '月繳', value: '1' },
+      { label: '季繳', value: '3' },
+      { label: '半年繳', value: '6' },
+      { label: '年繳', value: '12' }
+    ]
+  },
+  {
     key: 'status',
     label: '狀態',
     type: 'select',
@@ -45,6 +58,7 @@ const columns: TableColumn[] = [
   { key: 'properties.buildings.name', label: '社區' },
   { key: 'properties.owners.name', label: '屋主' },
   { key: 'monthly_rent', label: '月租金', align: 'right', format: (row) => formatCurrency(row.monthly_rent) },
+  { key: 'payment_cycle_months', label: '繳租週期', format: (row) => formatPaymentCycle(row.payment_cycle_months) },
   { key: 'starts_on', label: '起租日' },
   { key: 'ends_on', label: '到期日' },
   { key: 'status', label: '狀態', status: true }
@@ -54,4 +68,12 @@ const filters = computed<TableFilter[]>(() => [
   { key: 'properties.owner_id', label: '屋主', options: owners.value },
   { key: 'properties.building_id', label: '社區', options: buildings.value }
 ])
+
+function formatPaymentCycle(months: number) {
+  if (months === 1) return '月繳'
+  if (months === 3) return '季繳'
+  if (months === 6) return '半年繳'
+  if (months === 12) return '年繳'
+  return `${months || 1} 個月`
+}
 </script>

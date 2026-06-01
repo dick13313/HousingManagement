@@ -47,7 +47,7 @@
         <div class="panel-header">
           <div>
             <h2>{{ monthLabel }} 收租狀態</h2>
-            <p>每間出租房屋每個月都會列在這裡，方便一眼確認誰還沒繳。</p>
+            <p>支援月繳、季繳、半年繳、年繳與自訂月數，收款時會自動補齊期間帳單。</p>
           </div>
           <button class="filter" type="button" @click="loadRentOverview">重新整理</button>
         </div>
@@ -84,6 +84,7 @@
               <tr>
                 <th>房屋 / 社區</th>
                 <th>租客</th>
+                <th>週期</th>
                 <th class="amount">應繳</th>
                 <th class="amount">已繳</th>
                 <th>繳款日</th>
@@ -101,6 +102,7 @@
                   <strong>{{ row.tenantName }}</strong>
                   <span>{{ row.ownerName || '未指定屋主' }}</span>
                 </td>
+                <td>{{ formatPaymentCycle(row.paymentCycleMonths) }}</td>
                 <td class="amount">{{ formatCurrency(row.amountDue) }}</td>
                 <td class="amount">{{ formatCurrency(row.amountPaid) }}</td>
                 <td>{{ row.dueOn || `每月 ${row.rentDueDay} 日` }}</td>
@@ -108,20 +110,19 @@
                   <StatusPill :value="row.status" :tone="getStatusTone(row.status)" />
                 </td>
                 <td>
-                  <div v-if="row.invoiceId" class="row-actions">
-                    <button class="text-button inline-action" type="button" @click="editInvoice(row)">
-                      編輯
-                    </button>
+                  <div class="row-actions">
                     <button
+                      v-if="row.invoiceId"
                       class="text-button inline-action"
                       type="button"
-                      :disabled="saving || row.status === 'paid'"
-                      @click="confirmPaid(row)"
+                      @click="editInvoice(row)"
                     >
-                      {{ row.status === 'paid' ? '已繳款' : '確認已繳' }}
+                      編輯
+                    </button>
+                    <button class="text-button inline-action" type="button" :disabled="saving" @click="openReceiveRent(row)">
+                      收租
                     </button>
                   </div>
-                  <span v-else class="empty-text">待建帳</span>
                 </td>
               </tr>
             </tbody>
@@ -176,6 +177,75 @@
           </section>
         </div>
       </Teleport>
+
+      <Teleport to="body">
+        <div v-if="receivingRow" class="modal-backdrop" @click.self="cancelReceiveRent">
+          <section class="modal-panel">
+            <div class="panel-header compact">
+              <div>
+                <h2>收租</h2>
+                <p>{{ receivingRow.unitNo || receivingRow.address }} / {{ receivingRow.tenantName }}</p>
+              </div>
+              <button class="icon-button" type="button" @click="cancelReceiveRent">×</button>
+            </div>
+
+            <form class="entity-form modal-form" @submit.prevent="submitRentPayment">
+              <label class="form-field full-span">
+                <span>收款期間</span>
+                <div class="cycle-buttons">
+                  <button
+                    v-for="option in quickPaymentMonths"
+                    :key="option"
+                    class="secondary-button cycle-button"
+                    :class="{ active: paymentMonths === option }"
+                    type="button"
+                    @click="setPaymentMonths(option)"
+                  >
+                    {{ formatPaymentCycle(option) }}
+                  </button>
+                </div>
+              </label>
+
+              <label class="form-field">
+                <span>自訂月數</span>
+                <input v-model.number="rentPaymentForm.months" type="number" min="1" max="36" required />
+              </label>
+              <label class="form-field">
+                <span>付款日期</span>
+                <input v-model="rentPaymentForm.paid_on" type="date" required />
+              </label>
+              <label class="form-field">
+                <span>付款方式</span>
+                <select v-model="rentPaymentForm.method" required>
+                  <option v-for="method in paymentMethods" :key="method.value" :value="method.value">
+                    {{ method.label }}
+                  </option>
+                </select>
+              </label>
+              <label class="form-field">
+                <span>預估收款</span>
+                <input :value="receivePreview.amount" type="text" readonly />
+              </label>
+              <label class="form-field full-span">
+                <span>備註</span>
+                <textarea v-model="rentPaymentForm.notes" />
+              </label>
+
+              <div class="receive-summary full-span">
+                <strong>{{ receivePreview.period }}</strong>
+                <span>會自動建立缺少的月份帳單，並只補入尚未繳清的差額。</span>
+              </div>
+
+              <div class="form-actions">
+                <button class="primary-button" type="submit" :disabled="saving">
+                  {{ saving ? '收款中' : '確認收款' }}
+                </button>
+                <button class="secondary-button" type="button" @click="cancelReceiveRent">取消</button>
+              </div>
+            </form>
+          </section>
+        </div>
+      </Teleport>
     </template>
   </AppShell>
 </template>
@@ -185,6 +255,7 @@ type LeaseRow = {
   id: string
   monthly_rent: number
   rent_due_day: number
+  payment_cycle_months?: number
   tenants?: { name?: string }
   properties?: {
     unit_no?: string
@@ -199,6 +270,7 @@ type LeaseRow = {
 type InvoiceRow = {
   id: string
   lease_id: string
+  invoice_month: string
   amount_due: number
   amount_paid: number
   due_on: string
@@ -216,6 +288,8 @@ type RentOverviewRow = {
   ownerName: string
   ownerId: string
   tenantName: string
+  monthlyRent: number
+  paymentCycleMonths: number
   amountDue: number
   amountPaid: number
   rentDueDay: number
@@ -237,6 +311,7 @@ const saving = ref(false)
 const error = ref('')
 const editingInvoiceId = ref('')
 const editingInvoiceTitle = ref('')
+const receivingRow = ref<RentOverviewRow | null>(null)
 const invoiceForm = reactive({
   amount_due: 0,
   amount_paid: 0,
@@ -244,9 +319,32 @@ const invoiceForm = reactive({
   status: 'unpaid',
   notes: ''
 })
+const rentPaymentForm = reactive({
+  months: 1,
+  paid_on: todayDate(),
+  method: 'bank_transfer',
+  notes: ''
+})
+
+const quickPaymentMonths = [1, 3, 6, 12]
+const paymentMethods = [
+  { label: '轉帳', value: 'bank_transfer' },
+  { label: '現金', value: 'cash' },
+  { label: '支票', value: 'check' },
+  { label: '其他', value: 'other' }
+]
 
 const monthStart = computed(() => `${selectedMonth.value}-01`)
 const monthLabel = computed(() => selectedMonth.value.replace('-', ' 年 ') + ' 月')
+const paymentMonths = computed(() => sanitizePaymentMonths(rentPaymentForm.months))
+const receivePreview = computed(() => {
+  if (!receivingRow.value) return { amount: formatCurrency(0), period: '' }
+
+  return {
+    amount: formatCurrency(receivingRow.value.monthlyRent * paymentMonths.value),
+    period: formatMonthPeriod(monthStart.value, paymentMonths.value)
+  }
+})
 
 const filteredRentRows = computed(() => {
   return rentRows.value.filter((row) => {
@@ -291,14 +389,10 @@ async function loadRentOverview() {
   loading.value = true
 
   const [leasesResult, invoicesResult] = await Promise.all([
-    client
-      .from('leases')
-      .select('id, monthly_rent, rent_due_day, tenants(name), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))')
-      .eq('status', 'active')
-      .order('created_at', { ascending: true }),
+    loadActiveLeases(),
     client
       .from('rent_invoices')
-      .select('id, lease_id, amount_due, amount_paid, due_on, status, notes')
+      .select('id, lease_id, invoice_month, amount_due, amount_paid, due_on, status, notes')
       .eq('invoice_month', monthStart.value)
   ])
 
@@ -328,6 +422,8 @@ async function loadRentOverview() {
       ownerName: property.owners?.name || '',
       ownerId: property.owner_id || '',
       tenantName: lease.tenants?.name || '未指定租客',
+      monthlyRent: lease.monthly_rent,
+      paymentCycleMonths: lease.payment_cycle_months || 1,
       amountDue: invoice?.amount_due ?? lease.monthly_rent,
       amountPaid: invoice?.amount_paid ?? 0,
       rentDueDay: lease.rent_due_day,
@@ -336,6 +432,31 @@ async function loadRentOverview() {
       notes: invoice?.notes || ''
     }
   }).sort((a, b) => compareUnitNo(a.unitNo || a.address, b.unitNo || b.address))
+}
+
+async function loadActiveLeases() {
+  if (!client) return { data: [], error: null }
+
+  const baseSelect = 'id, monthly_rent, rent_due_day, tenants(name), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))'
+  const withPaymentCycle = await client
+    .from('leases')
+    .select(`id, monthly_rent, rent_due_day, payment_cycle_months, tenants(name), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))`)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
+
+  if (!withPaymentCycle.error || !isMissingPaymentCycleColumn(withPaymentCycle.error.message)) {
+    return withPaymentCycle
+  }
+
+  return client
+    .from('leases')
+    .select(baseSelect)
+    .eq('status', 'active')
+    .order('created_at', { ascending: true })
+}
+
+function isMissingPaymentCycleColumn(message = '') {
+  return message.includes('payment_cycle_months') && message.includes('does not exist')
 }
 
 function clearRentFilters() {
@@ -388,27 +509,81 @@ async function updateInvoice() {
   await loadRentOverview()
 }
 
-async function confirmPaid(row: RentOverviewRow) {
+function openReceiveRent(row: RentOverviewRow) {
+  receivingRow.value = row
+  rentPaymentForm.months = row.paymentCycleMonths || 1
+  rentPaymentForm.paid_on = todayDate()
+  rentPaymentForm.method = 'bank_transfer'
+  rentPaymentForm.notes = ''
+}
+
+function cancelReceiveRent() {
+  receivingRow.value = null
+}
+
+function setPaymentMonths(months: number) {
+  rentPaymentForm.months = months
+}
+
+async function submitRentPayment() {
   error.value = ''
 
-  if (!client || !row.invoiceId) return
-  if (row.status === 'paid') return
+  if (!client || !receivingRow.value) return
 
-  const remainingAmount = Math.max(row.amountDue - row.amountPaid, 0)
-  const ok = window.confirm(`確認「${row.unitNo || row.address} / ${row.tenantName}」已繳款 ${formatCurrency(remainingAmount || row.amountDue)}？`)
-  if (!ok) return
+  const row = receivingRow.value
+  const months = paymentMonths.value
+  const invoiceMonths = getMonthRange(monthStart.value, months)
 
   saving.value = true
 
-  if (remainingAmount > 0) {
+  for (const invoiceMonth of invoiceMonths) {
+    const { error: rpcError } = await client.rpc('create_monthly_rent_invoices', {
+      target_month: invoiceMonth
+    })
+
+    if (rpcError) {
+      error.value = rpcError.message
+      saving.value = false
+      return
+    }
+  }
+
+  const { data: invoices, error: invoicesError } = await client
+    .from('rent_invoices')
+    .select('id, lease_id, invoice_month, amount_due, amount_paid, due_on, status, notes')
+    .eq('lease_id', row.leaseId)
+    .in('invoice_month', invoiceMonths)
+
+  if (invoicesError) {
+    error.value = invoicesError.message
+    saving.value = false
+    return
+  }
+
+  const invoicesByMonth = new Map((invoices || []).map((invoice: any) => [invoice.invoice_month, invoice as InvoiceRow]))
+  const payableInvoices = invoiceMonths
+    .map((invoiceMonth) => invoicesByMonth.get(invoiceMonth))
+    .filter((invoice): invoice is InvoiceRow => Boolean(invoice))
+    .filter((invoice) => Number(invoice.amount_paid || 0) < Number(invoice.amount_due || 0))
+
+  if (payableInvoices.length === 0) {
+    error.value = '選取期間都已繳清，沒有需要補收的金額。'
+    saving.value = false
+    return
+  }
+
+  for (const invoice of payableInvoices) {
+    const amount = Math.max(Number(invoice.amount_due || 0) - Number(invoice.amount_paid || 0), 0)
+    if (amount <= 0) continue
+
     const { error: paymentError } = await client
       .from('payments')
       .insert({
-        rent_invoice_id: row.invoiceId,
-        paid_on: todayDate(),
-        amount: remainingAmount,
-        method: 'bank_transfer',
-        notes: '收租頁面一鍵確認已繳'
+        rent_invoice_id: invoice.id,
+        paid_on: rentPaymentForm.paid_on,
+        amount,
+        method: rentPaymentForm.method,
+        notes: buildPaymentNote(invoice.invoice_month)
       })
 
     if (paymentError) {
@@ -418,22 +593,19 @@ async function confirmPaid(row: RentOverviewRow) {
     }
   }
 
-  const { error: invoiceError } = await client
-    .from('rent_invoices')
-    .update({
-      amount_paid: row.amountDue,
-      status: 'paid'
-    })
-    .eq('id', row.invoiceId)
-
+  const missingMonths = invoiceMonths.filter((invoiceMonth) => !invoicesByMonth.has(invoiceMonth))
   saving.value = false
-
-  if (invoiceError) {
-    error.value = invoiceError.message
-    return
-  }
-
+  cancelReceiveRent()
   await loadRentOverview()
+
+  if (missingMonths.length > 0) {
+    error.value = `部分月份未建立帳單，可能超出租約期間：${missingMonths.map(formatInvoiceMonthLabel).join('、')}`
+  }
+}
+
+function buildPaymentNote(invoiceMonth: string) {
+  const baseNote = `收租頁面收取 ${formatInvoiceMonthLabel(invoiceMonth)} 租金`
+  return rentPaymentForm.notes ? `${baseNote}；${rentPaymentForm.notes}` : baseNote
 }
 
 async function createMonthlyInvoices() {
@@ -456,6 +628,50 @@ async function createMonthlyInvoices() {
   }
 
   await loadRentOverview()
+}
+
+function formatPaymentCycle(months: number) {
+  if (months === 1) return '月繳'
+  if (months === 3) return '季繳'
+  if (months === 6) return '半年繳'
+  if (months === 12) return '年繳'
+  return `${months || 1} 個月`
+}
+
+function sanitizePaymentMonths(value: number) {
+  const months = Number(value || 1)
+  if (!Number.isFinite(months)) return 1
+  return Math.min(Math.max(Math.trunc(months), 1), 36)
+}
+
+function getMonthRange(startMonth: string, months: number) {
+  return Array.from({ length: months }, (_, index) => formatMonthStart(addMonths(parseMonthStart(startMonth), index)))
+}
+
+function formatMonthPeriod(startMonth: string, months: number) {
+  const range = getMonthRange(startMonth, months)
+  if (range.length === 1) return formatInvoiceMonthLabel(range[0])
+  return `${formatInvoiceMonthLabel(range[0])} - ${formatInvoiceMonthLabel(range[range.length - 1])}`
+}
+
+function parseMonthStart(value: string) {
+  const [year, month] = value.slice(0, 7).split('-').map(Number)
+  return new Date(year, month - 1, 1)
+}
+
+function addMonths(date: Date, months: number) {
+  return new Date(date.getFullYear(), date.getMonth() + months, 1)
+}
+
+function formatMonthStart(date: Date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  return `${year}-${month}-01`
+}
+
+function formatInvoiceMonthLabel(invoiceMonth: string) {
+  const [year, month] = invoiceMonth.slice(0, 7).split('-')
+  return `${year} 年 ${Number(month)} 月`
 }
 
 function toMonthInputValue(date: Date) {

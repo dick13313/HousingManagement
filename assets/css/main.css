@@ -692,6 +692,41 @@ td span {
   gap: 10px;
 }
 
+.full-span {
+  grid-column: 1 / -1;
+}
+
+.cycle-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.cycle-button {
+  min-height: 42px;
+  padding: 0 14px;
+}
+
+.cycle-button.active {
+  border-color: #3b82f6;
+  background: var(--blue-soft);
+  color: var(--blue);
+}
+
+.receive-summary {
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.receive-summary span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
 .error-text {
   color: var(--red);
 }
