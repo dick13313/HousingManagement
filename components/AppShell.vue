@@ -123,11 +123,15 @@ const { client } = useSupabaseClientLite()
 const currentRole = ref('')
 const showMobileMore = ref(false)
 
-const todayLabel = new Intl.DateTimeFormat('zh-TW', {
-  month: 'long',
-  day: 'numeric',
-  weekday: 'short'
-}).format(new Date())
+const todayLabel = ref('')
+
+onMounted(() => {
+  todayLabel.value = new Intl.DateTimeFormat('zh-TW', {
+    month: 'long',
+    day: 'numeric',
+    weekday: 'short'
+  }).format(new Date())
+})
 
 const availableNavItems = computed(() => {
   return navItems.filter((item) => !item.adminOnly || currentRole.value === 'admin')
