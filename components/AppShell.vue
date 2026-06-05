@@ -138,7 +138,7 @@ const availableNavItems = computed(() => {
 })
 
 const currentNavItem = computed(() => {
-  return availableNavItems.value.find((item) => item.to === route.path) || navItems[0]
+  return navItems.find((item) => item.to === route.path) || navItems[0]
 })
 
 const pageTitle = computed(() => {
