@@ -26,12 +26,16 @@ export function useAuth() {
 
   async function signUp(email: string, password: string, displayName: string) {
     if (!client) return false
+    const emailRedirectTo = import.meta.client
+      ? new URL('/', window.location.origin).toString()
+      : undefined
     loading.value = true
     authError.value = ''
     const { error } = await client.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo,
         data: {
           display_name: displayName
         }
