@@ -1,6 +1,6 @@
-# HousingManagement Agent Guide
+# HousingManagement Codex Agent Guide
 
-本文件給未來接手此專案的 AI agent / 開發者快速理解系統現況。使用者主要以繁體中文溝通，回覆與介面文字請維持繁體中文。
+本文件給 Codex / AI agent / 開發者快速理解此專案。使用者主要以繁體中文溝通，回覆、文件補充與使用者可見介面文字請維持繁體中文。
 
 ## 專案定位
 
@@ -13,7 +13,7 @@
 - 每月租金帳款、付款、未繳提醒
 - 年度租金收入報表，供所得稅申報整理
 
-設計重點是「長輩也能用」：深色系、簡約、少層級、表格清楚、常用操作用 modal。
+設計重點是「長輩也能用」：深色系、簡約、少層級、表格清楚、常用操作使用 modal。
 
 ## 技術棧
 
@@ -37,7 +37,7 @@ npm run dev
 npm run generate
 ```
 
-本機環境曾出現 npm PATH 不穩，若 `npm` 找不到，優先使用 `node_modules\.bin\nuxt.cmd`。
+本機環境曾出現 npm PATH 不穩，若 `npm` 找不到，優先使用 `.\node_modules\.bin\nuxt.cmd`。
 
 ## 環境變數
 
@@ -67,7 +67,7 @@ SUPABASE_KEY=
 - `assets/css/main.css`：全站深色 UI 樣式
 - `types/management.ts`：管理表格欄位型別
 - `supabase/migrations/`：資料庫 schema / RLS / function migrations
-- `supabase/seed.sql`：真實房客資料，已被 `.gitignore`，不得提交
+- `supabase/seed.sql`：若存在，可能是真實房客資料，必須維持 `.gitignore`，不得提交
 - `docs/`：需求、技術方案與部署文件
 - `UIUX/`：早期 UI/UX 設計參考
 
@@ -114,6 +114,8 @@ SUPABASE_KEY=
 
 租金調漲應透過重新簽約或更新租約金額後重新產生帳款處理。
 
+收租週期使用 `leases.payment_cycle_months` 表示，可支援月繳、季繳、半年繳、年繳與自訂月數。收租頁會依選取期間建立缺少的月份帳單，並補入尚未繳清的差額。
+
 ## 權限設計
 
 `profiles.role` 使用 `app_role` enum：
@@ -154,9 +156,11 @@ url = "https://mcp.supabase.com/mcp?project_ref=muvfydiggwlvujonvyoe"
 
 做 schema 變更前先用 `list_tables` 檢查現況。DDL 請用 `apply_migration`，不要用 `execute_sql`。
 
-目前已套用到遠端的 latest migration：
+目前 migration 檔案已到：
 
-- `0008_account_management.sql`
+- `0009_payment_cycle_months.sql`
+
+遠端是否已套用請以 Supabase migration 狀態或實際 schema 為準，不要只依賴本文件。
 
 ## 收租與報表邏輯
 
@@ -176,7 +180,8 @@ url = "https://mcp.supabase.com/mcp?project_ref=muvfydiggwlvujonvyoe"
 - 可選月份
 - 可建立本月帳單
 - 按房屋編號排序
-- 「確認已繳」會詢問確認，新增 payment，並把帳款標示為已繳
+- 「收租」支援月繳、季繳、半年繳、年繳與自訂月數
+- 收款時會呼叫 `create_monthly_rent_invoices` 建立缺少帳單，再新增 payment 補齊未繳差額
 
 `/reports`：
 
@@ -193,6 +198,15 @@ url = "https://mcp.supabase.com/mcp?project_ref=muvfydiggwlvujonvyoe"
 - 表格要能篩選，尤其屋主、社區
 - 新增頁面時要在 `components/AppShell.vue` 補選單
 - 複用現有 CSS class：`panel`、`filter-bar`、`filter-field`、`primary-button`、`secondary-button`、`text-button`、`modal-panel`
+
+## 程式風格
+
+- Vue component 使用 `<script setup lang="ts">`
+- 基礎 CRUD 管理頁優先沿用 `components/ManagementPage.vue`
+- Supabase client 與登入狀態優先沿用 `useSupabaseClientLite`、`useAuth`、`useSupabaseTable`
+- 使用者可見錯誤訊息維持繁體中文
+- 新增 route 時同步更新 `components/AppShell.vue` 的桌面與手機導覽
+- 送資料到 Supabase 前注意空字串與 `null` 的差異；既有 CRUD helper 會把 `''` normalize 成 `null`
 
 ## 部署
 
@@ -264,21 +278,12 @@ netstat -ano | Select-String ':3000'
 
 不要隨意停止使用者正在用的 dev server，除非使用者要求。
 
-## 目前未提交的重要變更
+## 接手檢查
 
-截至本文件撰寫時，工作區包含尚未提交的新功能：
-
-- 帳號管理頁 `/accounts`
-- 年度報稅報表 `/reports`
-- `supabase/migrations/0008_account_management.sql`
-- `AppShell.vue` 選單更新
-- `main.css` 樣式補強
-- `supabase/README.md` 更新
-
-接手時請先執行：
+接手或修改前請先執行：
 
 ```powershell
 git status --short --ignored
 ```
 
-確認是否要繼續測試、commit 或 push。
+確認工作區是否已有使用者變更。不要覆蓋或 revert 不是自己做的變更。
