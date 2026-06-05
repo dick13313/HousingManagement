@@ -77,10 +77,14 @@
             <div class="mobile-menu-copy">
               <strong>更多功能</strong>
               <span>{{ pageTitle }}</span>
-              <small>{{ user ? '已登入，可切換其他管理頁面。' : '尚未登入，登入後可管理資料。' }}</small>
+              <small>{{ user ? '已登入，可切換其他管理頁面，或直接登出。' : '尚未登入，可先前往登入再開始管理。' }}</small>
             </div>
-            <button class="icon-button" type="button" @click="showMobileMore = false">×</button>
+            <button class="icon-button" type="button" aria-label="關閉更多功能選單" @click="showMobileMore = false">×</button>
           </div>
+
+          <p class="mobile-menu-current">
+            目前頁面：<strong>{{ currentNavItem.label }}</strong>
+          </p>
 
           <div class="mobile-menu-grid">
             <NuxtLink
@@ -94,6 +98,25 @@
               <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
               {{ item.label }}
             </NuxtLink>
+          </div>
+
+          <div class="mobile-menu-footer">
+            <NuxtLink
+              v-if="!user"
+              class="primary-link mobile-menu-auth"
+              to="/login"
+              @click="showMobileMore = false"
+            >
+              前往登入
+            </NuxtLink>
+            <button
+              v-else
+              class="secondary-button mobile-menu-auth"
+              type="button"
+              @click="handleMobileAuthAction"
+            >
+              登出目前帳號
+            </button>
           </div>
         </section>
       </div>
@@ -170,6 +193,11 @@ const mobileMoreItems = computed(() => {
 watch(() => route.path, () => {
   showMobileMore.value = false
 })
+
+async function handleMobileAuthAction() {
+  showMobileMore.value = false
+  await signOut()
+}
 
 async function loadCurrentRole() {
   await loadUser()

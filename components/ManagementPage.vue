@@ -44,6 +44,10 @@
         <button class="secondary-button" type="button" @click="clearFilters">清除篩選</button>
       </div>
 
+      <p v-if="filters.length" class="filter-summary" aria-live="polite">
+        {{ filtersDirty ? `目前套用 ${activeFilterCount} 個篩選條件，顯示 ${filteredRows.length} 筆資料。` : '尚未套用篩選條件，目前顯示全部資料。' }}
+      </p>
+
       <section v-if="error" class="state-panel error-panel" aria-live="polite">
         <strong>資料暫時無法顯示</strong>
         <p>{{ error }}</p>
@@ -146,12 +150,20 @@
               <h2>{{ editingId ? '編輯資料' : actionLabel }}</h2>
               <p>{{ editingId ? '修改資料後儲存更新。' : '填寫必要資料後儲存到 Supabase。' }}</p>
             </div>
-            <button class="icon-button" type="button" @click="closeForm">×</button>
+            <button class="icon-button" type="button" aria-label="關閉表單" @click="closeForm">×</button>
+          </div>
+
+          <div class="form-helper-panel" aria-live="polite">
+            <strong>{{ editingId ? '編輯模式' : '新增模式' }}</strong>
+            <span>標示 <em>*</em> 的欄位為必填，建議先完成必要欄位再補充備註。</span>
           </div>
 
           <form class="entity-form modal-form" @submit.prevent="submit">
             <label v-for="field in fields" :key="field.key" class="form-field">
-              <span>{{ field.label }}</span>
+              <span>
+                {{ field.label }}
+                <em v-if="field.required" class="required-mark" aria-hidden="true">*</em>
+              </span>
               <small v-if="field.helpText" class="field-help">{{ field.helpText }}</small>
 
               <textarea
@@ -245,6 +257,10 @@ const filteredRows = computed(() => {
 
 const filtersDirty = computed(() => {
   return props.filters.some((filter) => Boolean(selectedFilters[filter.key]))
+})
+
+const activeFilterCount = computed(() => {
+  return props.filters.filter((filter) => Boolean(selectedFilters[filter.key])).length
 })
 
 const listMeta = computed(() => {

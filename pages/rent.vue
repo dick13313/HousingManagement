@@ -4,6 +4,7 @@
       <div>
         <p class="eyebrow">租務管理</p>
         <h1>收租管理</h1>
+        <p class="page-helper-text">先選月份，再用屋主與社區篩選縮小範圍；手機上可直接用卡片完成收租。</p>
       </div>
       <div class="topbar-actions">
         <input v-model="selectedMonth" class="month-input" type="month" />
@@ -74,60 +75,127 @@
           <button class="secondary-button" type="button" @click="clearRentFilters">清除篩選</button>
         </div>
 
-        <p v-if="error" class="error-text">{{ error }}</p>
-        <p v-if="loading" class="empty-text">資料載入中...</p>
-        <p v-else-if="filteredRentRows.length === 0" class="empty-text">目前沒有符合條件的收租資料。</p>
+        <p class="filter-summary" aria-live="polite">
+          {{ activeFilterSummary }}
+        </p>
 
-        <div v-else class="table-wrap rent-table-wrap">
-          <table class="rent-table">
-            <thead>
-              <tr>
-                <th>房屋 / 社區</th>
-                <th>租客</th>
-                <th>週期</th>
-                <th class="amount">應繳</th>
-                <th class="amount">已繳</th>
-                <th>繳款日</th>
-                <th>狀態</th>
-                <th>操作</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="row in filteredRentRows" :key="row.leaseId">
-                <td>
+        <section v-if="error" class="state-panel error-panel" aria-live="polite">
+          <strong>收租資料暫時無法顯示</strong>
+          <p>{{ error }}</p>
+          <button class="secondary-button" type="button" @click="loadRentOverview">重新整理</button>
+        </section>
+
+        <section v-else-if="loading" class="state-panel" aria-live="polite">
+          <strong>資料載入中</strong>
+          <p>系統正在整理本月帳單、付款狀態與可收款項目。</p>
+        </section>
+
+        <section v-else-if="filteredRentRows.length === 0" class="state-panel" aria-live="polite">
+          <strong>目前沒有符合條件的收租資料</strong>
+          <p>可以先清除篩選條件，或建立本月帳單後再回來確認。</p>
+          <div class="state-actions">
+            <button class="secondary-button" type="button" @click="clearRentFilters">清除篩選</button>
+            <button class="primary-button" type="button" :disabled="saving" @click="createMonthlyInvoices">建立本月帳單</button>
+          </div>
+        </section>
+
+        <template v-else>
+          <div class="mobile-card-list rent-mobile-list">
+            <article v-for="row in filteredRentRows" :key="`${row.leaseId}-mobile`" class="mobile-data-card">
+              <div class="mobile-data-card__header">
+                <div>
                   <strong>{{ row.unitNo || row.address }}</strong>
-                  <span>{{ row.buildingName || '未指定社區' }}・{{ row.address }}</span>
-                </td>
-                <td>
-                  <strong>{{ row.tenantName }}</strong>
-                  <span>{{ row.ownerName || '未指定屋主' }}</span>
-                </td>
-                <td>{{ formatPaymentCycle(row.paymentCycleMonths) }}</td>
-                <td class="amount">{{ formatCurrency(row.amountDue) }}</td>
-                <td class="amount">{{ formatCurrency(row.amountPaid) }}</td>
-                <td>{{ row.dueOn || `每月 ${row.rentDueDay} 日` }}</td>
-                <td>
-                  <StatusPill :value="row.status" :tone="getStatusTone(row.status)" />
-                </td>
-                <td>
-                  <div class="row-actions">
-                    <button
-                      v-if="row.invoiceId"
-                      class="text-button inline-action"
-                      type="button"
-                      @click="editInvoice(row)"
-                    >
-                      編輯
-                    </button>
-                    <button class="text-button inline-action" type="button" :disabled="saving" @click="openReceiveRent(row)">
-                      收租
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+                  <p>{{ row.tenantName }} ・ {{ row.buildingName || '未指定社區' }}</p>
+                </div>
+                <StatusPill :value="row.status" :tone="getStatusTone(row.status)" />
+              </div>
+
+              <dl class="mobile-data-card__details">
+                <div>
+                  <dt>屋主</dt>
+                  <dd>{{ row.ownerName || '未指定屋主' }}</dd>
+                </div>
+                <div>
+                  <dt>繳費週期</dt>
+                  <dd>{{ formatPaymentCycle(row.paymentCycleMonths) }}</dd>
+                </div>
+                <div>
+                  <dt>應繳 / 已繳</dt>
+                  <dd>{{ formatCurrency(row.amountDue) }} / {{ formatCurrency(row.amountPaid) }}</dd>
+                </div>
+                <div>
+                  <dt>繳款日</dt>
+                  <dd>{{ row.dueOn || `每月 ${row.rentDueDay} 日` }}</dd>
+                </div>
+              </dl>
+
+              <div class="row-actions mobile-row-actions">
+                <button
+                  v-if="row.invoiceId"
+                  class="text-button inline-action"
+                  type="button"
+                  @click="editInvoice(row)"
+                >
+                  編輯帳單
+                </button>
+                <button class="primary-button" type="button" :disabled="saving" @click="openReceiveRent(row)">
+                  收租
+                </button>
+              </div>
+            </article>
+          </div>
+
+          <div class="table-wrap rent-table-wrap">
+            <table class="rent-table">
+              <thead>
+                <tr>
+                  <th>房屋 / 社區</th>
+                  <th>租客</th>
+                  <th>週期</th>
+                  <th class="amount">應繳</th>
+                  <th class="amount">已繳</th>
+                  <th>繳款日</th>
+                  <th>狀態</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="row in filteredRentRows" :key="row.leaseId">
+                  <td>
+                    <strong>{{ row.unitNo || row.address }}</strong>
+                    <span>{{ row.buildingName || '未指定社區' }}・{{ row.address }}</span>
+                  </td>
+                  <td>
+                    <strong>{{ row.tenantName }}</strong>
+                    <span>{{ row.ownerName || '未指定屋主' }}</span>
+                  </td>
+                  <td>{{ formatPaymentCycle(row.paymentCycleMonths) }}</td>
+                  <td class="amount">{{ formatCurrency(row.amountDue) }}</td>
+                  <td class="amount">{{ formatCurrency(row.amountPaid) }}</td>
+                  <td>{{ row.dueOn || `每月 ${row.rentDueDay} 日` }}</td>
+                  <td>
+                    <StatusPill :value="row.status" :tone="getStatusTone(row.status)" />
+                  </td>
+                  <td>
+                    <div class="row-actions">
+                      <button
+                        v-if="row.invoiceId"
+                        class="text-button inline-action"
+                        type="button"
+                        @click="editInvoice(row)"
+                      >
+                        編輯
+                      </button>
+                      <button class="text-button inline-action" type="button" :disabled="saving" @click="openReceiveRent(row)">
+                        收租
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </section>
 
       <Teleport to="body">
@@ -352,6 +420,24 @@ const filteredRentRows = computed(() => {
     if (buildingFilter.value && row.buildingId !== buildingFilter.value) return false
     return true
   }).sort((a, b) => compareUnitNo(a.unitNo || a.address, b.unitNo || b.address))
+})
+
+const activeFilterSummary = computed(() => {
+  const parts = []
+  if (ownerFilter.value) {
+    const owner = owners.value.find((option) => option.value === ownerFilter.value)
+    parts.push(`屋主：${owner?.label || '已選擇'}`)
+  }
+  if (buildingFilter.value) {
+    const building = buildings.value.find((option) => option.value === buildingFilter.value)
+    parts.push(`社區：${building?.label || '已選擇'}`)
+  }
+
+  if (!parts.length) {
+    return `目前顯示全部 ${filteredRentRows.value.length} 筆收租資料。`
+  }
+
+  return `已套用 ${parts.join('、')}，目前顯示 ${filteredRentRows.value.length} 筆資料。`
 })
 
 const summary = computed(() => {
