@@ -22,22 +22,25 @@
       <form class="entity-form auth-form" @submit.prevent="submit">
         <label v-if="mode === 'signup'" class="form-field">
           <span>顯示名稱</span>
-          <input v-model="displayName" required />
+          <small class="field-help">會顯示在系統內，方便辨識操作者。</small>
+          <input v-model="displayName" required autocomplete="name" placeholder="例如：王小美" />
         </label>
 
         <label class="form-field">
           <span>Email</span>
-          <input v-model="email" type="email" required />
+          <small class="field-help">登入通知與帳號識別都會使用這個 Email。</small>
+          <input v-model="email" type="email" required autocomplete="email" inputmode="email" placeholder="name@example.com" />
         </label>
 
         <label class="form-field">
           <span>密碼</span>
-          <input v-model="password" type="password" required minlength="6" />
+          <small class="field-help">至少 6 碼，建議使用容易辨識的個人密碼規則。</small>
+          <input v-model="password" type="password" required minlength="6" :autocomplete="mode === 'login' ? 'current-password' : 'new-password'" placeholder="至少 6 碼" />
         </label>
 
         <p v-if="authError" class="error-text">{{ authError }}</p>
 
-        <div class="form-actions">
+        <div class="form-actions sticky-form-actions">
           <button class="primary-button" type="submit" :disabled="loading">
             {{ loading ? '處理中' : mode === 'login' ? '登入' : '註冊' }}
           </button>
