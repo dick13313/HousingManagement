@@ -47,36 +47,79 @@
           <button class="filter" type="button" @click="loadDashboard">重新整理</button>
         </div>
 
-        <p v-if="loading" class="empty-text">資料載入中...</p>
-        <p v-else-if="unpaidInvoices.length === 0" class="empty-text">目前沒有未繳帳款。</p>
+        <section v-if="loading" class="state-panel" aria-live="polite">
+          <strong>資料載入中</strong>
+          <p>系統正在整理本月未繳帳款與摘要資訊。</p>
+        </section>
 
-        <div v-else class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>租客</th>
-                <th>房屋</th>
-                <th class="amount">應繳</th>
-                <th>到期日</th>
-                <th>狀態</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="invoice in unpaidInvoices" :key="invoice.id">
-                <td>
-                  <strong>{{ invoice.leases?.tenants?.name || '-' }}</strong>
-                  <span>{{ invoice.leases?.tenants?.phone || '未填電話' }}</span>
-                </td>
-                <td>{{ invoice.leases?.properties?.address || '-' }}</td>
-                <td class="amount">{{ formatCurrency(invoice.amount_due) }}</td>
-                <td>{{ formatDate(invoice.due_on) }}</td>
-                <td>
-                  <StatusPill :value="invoice.status" :tone="getStatusTone(invoice.status)" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
+        <section v-else-if="unpaidInvoices.length === 0" class="state-panel" aria-live="polite">
+          <strong>目前沒有未繳帳款</strong>
+          <p>本月帳款都已完成，接下來可前往收租頁建立新月份帳單。</p>
+          <div class="state-actions">
+            <NuxtLink class="primary-link" to="/rent">前往收租</NuxtLink>
+          </div>
+        </section>
+
+        <template v-else>
+          <div class="mobile-card-list dashboard-mobile-list">
+            <article v-for="invoice in unpaidInvoices" :key="`${invoice.id}-mobile`" class="mobile-data-card">
+              <div class="mobile-data-card__header">
+                <div>
+                  <strong>{{ invoice.leases?.tenants?.name || '未指定租客' }}</strong>
+                  <p>{{ invoice.leases?.properties?.address || '未指定房屋' }}</p>
+                </div>
+                <StatusPill :value="invoice.status" :tone="getStatusTone(invoice.status)" />
+              </div>
+
+              <dl class="mobile-data-card__details">
+                <div>
+                  <dt>聯絡電話</dt>
+                  <dd>{{ invoice.leases?.tenants?.phone || '未填電話' }}</dd>
+                </div>
+                <div>
+                  <dt>應繳金額</dt>
+                  <dd>{{ formatCurrency(invoice.amount_due) }}</dd>
+                </div>
+                <div>
+                  <dt>到期日</dt>
+                  <dd>{{ formatDate(invoice.due_on) }}</dd>
+                </div>
+              </dl>
+
+              <div class="state-actions mobile-row-actions">
+                <NuxtLink class="primary-link" to="/rent">前往收租</NuxtLink>
+              </div>
+            </article>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>租客</th>
+                  <th>房屋</th>
+                  <th class="amount">應繳</th>
+                  <th>到期日</th>
+                  <th>狀態</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="invoice in unpaidInvoices" :key="invoice.id">
+                  <td>
+                    <strong>{{ invoice.leases?.tenants?.name || '-' }}</strong>
+                    <span>{{ invoice.leases?.tenants?.phone || '未填電話' }}</span>
+                  </td>
+                  <td>{{ invoice.leases?.properties?.address || '-' }}</td>
+                  <td class="amount">{{ formatCurrency(invoice.amount_due) }}</td>
+                  <td>{{ formatDate(invoice.due_on) }}</td>
+                  <td>
+                    <StatusPill :value="invoice.status" :tone="getStatusTone(invoice.status)" />
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </template>
       </div>
 
       <aside class="panel side-panel">
