@@ -14,11 +14,11 @@
 import type { FormField, TableColumn } from '~/types/management'
 
 const fields: FormField[] = [
-  { key: 'name', label: '屋主姓名', required: true },
-  { key: 'phone', label: '電話', type: 'tel' },
-  { key: 'email', label: 'Email', type: 'email' },
-  { key: 'address', label: '地址' },
-  { key: 'notes', label: '備註', type: 'textarea' }
+  { key: 'name', label: '屋主姓名', required: true, placeholder: '例如：陳小姐' },
+  { key: 'phone', label: '電話', type: 'tel', placeholder: '0912-345-678', autocomplete: 'tel', inputmode: 'tel' },
+  { key: 'email', label: 'Email', type: 'email', placeholder: 'owner@example.com', autocomplete: 'email', inputmode: 'email' },
+  { key: 'address', label: '地址', placeholder: '方便對帳或寄送文件的聯絡地址' },
+  { key: 'notes', label: '備註', type: 'textarea', placeholder: '例如：偏好聯絡時間、匯款提醒' }
 ]
 
 const columns: TableColumn[] = [

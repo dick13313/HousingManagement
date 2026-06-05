@@ -10,6 +10,10 @@ export type FormField = {
   required?: boolean
   valueType?: 'string' | 'number'
   options?: FieldOption[]
+  placeholder?: string
+  helpText?: string
+  autocomplete?: string
+  inputmode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search'
 }
 
 export type TableColumn = {

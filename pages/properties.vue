@@ -20,11 +20,11 @@ const { owners, buildings } = useReferenceOptions()
 const fields = computed<FormField[]>(() => [
   { key: 'owner_id', label: '屋主', type: 'select', required: true, options: owners.value },
   { key: 'building_id', label: '大樓社區', type: 'select', options: buildings.value },
-  { key: 'address', label: '地址', required: true },
-  { key: 'floor', label: '樓層' },
-  { key: 'unit_no', label: '房號' },
-  { key: 'layout', label: '房型' },
-  { key: 'area_ping', label: '坪數', type: 'number', valueType: 'number' },
+  { key: 'address', label: '地址', required: true, placeholder: '例如：台北市中山區民生東路二段 10 號' },
+  { key: 'floor', label: '樓層', placeholder: '例如：8F' },
+  { key: 'unit_no', label: '房號', placeholder: '例如：801' },
+  { key: 'layout', label: '房型', placeholder: '例如：2房1廳1衛' },
+  { key: 'area_ping', label: '坪數', type: 'number', valueType: 'number', placeholder: '例如：18.5', inputmode: 'decimal' },
   {
     key: 'status',
     label: '狀態',
@@ -36,7 +36,7 @@ const fields = computed<FormField[]>(() => [
       { label: '停用', value: 'disabled' }
     ]
   },
-  { key: 'notes', label: '備註', type: 'textarea' }
+  { key: 'notes', label: '備註', type: 'textarea', placeholder: '例如：附家具、可入住日期、停車位資訊' }
 ])
 
 const columns: TableColumn[] = [
