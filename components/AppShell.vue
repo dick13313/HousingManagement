@@ -17,6 +17,7 @@
           class="nav-item"
           active-class="active"
           :to="item.to"
+          :aria-current="isCurrentNav(item.to) ? 'page' : undefined"
         >
           <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
           {{ item.label }}
@@ -51,6 +52,7 @@
         class="mobile-tab"
         active-class="active"
         :to="item.to"
+        :aria-current="isCurrentNav(item.to) ? 'page' : undefined"
         @click="showMobileMore = false"
       >
         <span class="mobile-tab-icon" aria-hidden="true">{{ item.icon }}</span>
@@ -58,11 +60,14 @@
       </NuxtLink>
 
       <button
+        ref="mobileMoreButton"
         class="mobile-tab"
         type="button"
         :class="{ active: showMobileMore }"
         :aria-expanded="showMobileMore"
         aria-controls="mobile-more-menu"
+        aria-haspopup="dialog"
+        aria-label="開啟更多功能選單"
         @click="showMobileMore = !showMobileMore"
       >
         <span class="mobile-tab-icon" aria-hidden="true">⋯</span>
@@ -72,14 +77,26 @@
 
     <Teleport to="body">
       <div v-if="showMobileMore" class="mobile-menu-backdrop" @click.self="showMobileMore = false">
-        <section id="mobile-more-menu" class="mobile-menu-panel" aria-label="更多功能">
+        <section
+          id="mobile-more-menu"
+          class="mobile-menu-panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="mobile-more-menu-title"
+        >
           <div class="mobile-menu-header">
             <div class="mobile-menu-copy">
-              <strong>更多功能</strong>
+              <strong id="mobile-more-menu-title">更多功能</strong>
               <span>{{ pageTitle }}</span>
               <small>{{ user ? '已登入，可切換其他管理頁面，或直接登出。' : '尚未登入，可先前往登入再開始管理。' }}</small>
             </div>
-            <button class="icon-button" type="button" aria-label="關閉更多功能選單" @click="showMobileMore = false">×</button>
+            <button
+              ref="mobileMenuCloseButton"
+              class="icon-button"
+              type="button"
+              aria-label="關閉更多功能選單"
+              @click="showMobileMore = false"
+            >×</button>
           </div>
 
           <p class="mobile-menu-current">
@@ -93,6 +110,7 @@
               class="mobile-menu-item"
               active-class="active"
               :to="item.to"
+              :aria-current="isCurrentNav(item.to) ? 'page' : undefined"
               @click="showMobileMore = false"
             >
               <span class="nav-icon" aria-hidden="true">{{ item.icon }}</span>
@@ -145,8 +163,13 @@ const { user, loadUser, signOut } = useAuth()
 const { client } = useSupabaseClientLite()
 const currentRole = ref('')
 const showMobileMore = ref(false)
+const mobileMoreButton = ref<HTMLButtonElement | null>(null)
+const mobileMenuCloseButton = ref<HTMLButtonElement | null>(null)
 
 const todayLabel = ref('')
+
+let previousBodyOverflow = ''
+let previousHtmlOverflow = ''
 
 onMounted(() => {
   todayLabel.value = new Intl.DateTimeFormat('zh-TW', {
@@ -190,8 +213,36 @@ const mobileMoreItems = computed(() => {
   return availableNavItems.value.filter((item) => !mobilePrimaryRoutes.includes(item.to))
 })
 
+function isCurrentNav(path: string) {
+  return route.path === path
+}
+
+function handleDocumentKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && showMobileMore.value) {
+    showMobileMore.value = false
+  }
+}
+
 watch(() => route.path, () => {
   showMobileMore.value = false
+})
+
+watch(showMobileMore, async (isOpen) => {
+  if (!import.meta.client) return
+
+  if (isOpen) {
+    previousBodyOverflow = document.body.style.overflow
+    previousHtmlOverflow = document.documentElement.style.overflow
+    document.body.style.overflow = 'hidden'
+    document.documentElement.style.overflow = 'hidden'
+    await nextTick()
+    mobileMenuCloseButton.value?.focus()
+    return
+  }
+
+  document.body.style.overflow = previousBodyOverflow
+  document.documentElement.style.overflow = previousHtmlOverflow
+  mobileMoreButton.value?.focus()
 })
 
 async function handleMobileAuthAction() {
@@ -216,5 +267,16 @@ async function loadCurrentRole() {
   currentRole.value = data?.role || ''
 }
 
+onMounted(() => {
+  document.addEventListener('keydown', handleDocumentKeydown)
+})
+
 onMounted(loadCurrentRole)
+
+onBeforeUnmount(() => {
+  if (!import.meta.client) return
+  document.removeEventListener('keydown', handleDocumentKeydown)
+  document.body.style.overflow = previousBodyOverflow
+  document.documentElement.style.overflow = previousHtmlOverflow
+})
 </script>
