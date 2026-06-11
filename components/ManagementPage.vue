@@ -144,7 +144,7 @@
 
     <Teleport to="body">
       <div v-if="showForm" class="modal-backdrop" @click.self="closeForm">
-        <section class="modal-panel">
+        <section class="modal-panel" role="dialog" aria-modal="true" :aria-label="editingId ? '編輯資料' : actionLabel">
           <div class="panel-header compact">
             <div>
               <h2>{{ editingId ? '編輯資料' : actionLabel }}</h2>

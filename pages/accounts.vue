@@ -62,9 +62,24 @@
         <button class="secondary-button" type="button" @click="clearFilters">清除篩選</button>
       </div>
 
-      <p v-if="error" class="error-text">{{ error }}</p>
-      <p v-if="loading" class="empty-text">資料載入中...</p>
-      <p v-else-if="filteredProfiles.length === 0" class="empty-text">目前沒有符合條件的帳號。</p>
+      <section v-if="error" class="state-panel error-panel" aria-live="polite">
+        <strong>帳號資料暫時無法顯示</strong>
+        <p>{{ error }}</p>
+        <button class="secondary-button" type="button" @click="load">重新整理</button>
+      </section>
+
+      <section v-else-if="loading" class="state-panel" aria-live="polite">
+        <strong>資料載入中</strong>
+        <p>系統正在整理帳號、角色與屋主綁定資訊。</p>
+      </section>
+
+      <section v-else-if="filteredProfiles.length === 0" class="state-panel" aria-live="polite">
+        <strong>目前沒有符合條件的帳號</strong>
+        <p>{{ keyword || roleFilter || ownerFilter ? '可以先清除篩選條件，再檢查其他帳號。' : '註冊完成後，新的帳號會出現在這裡。' }}</p>
+        <div v-if="keyword || roleFilter || ownerFilter" class="state-actions">
+          <button class="secondary-button" type="button" @click="clearFilters">清除篩選</button>
+        </div>
+      </section>
 
       <div v-else class="table-wrap">
         <table>
@@ -105,13 +120,13 @@
 
     <Teleport to="body">
       <div v-if="editingProfile" class="modal-backdrop" @click.self="closeEdit">
-        <section class="modal-panel">
+        <section class="modal-panel" role="dialog" aria-modal="true" aria-label="編輯帳號">
           <div class="panel-header compact">
             <div>
               <h2>編輯帳號</h2>
               <p>{{ editingProfile.email || editingProfile.id }}</p>
             </div>
-            <button class="icon-button" type="button" @click="closeEdit">×</button>
+            <button class="icon-button" type="button" aria-label="關閉編輯帳號視窗" @click="closeEdit">×</button>
           </div>
 
           <form class="entity-form modal-form" @submit.prevent="saveProfile">
