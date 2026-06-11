@@ -7,7 +7,10 @@
         <p class="page-helper-text">先選月份，再用屋主與社區篩選縮小範圍；手機上可直接用卡片完成收租。</p>
       </div>
       <div class="topbar-actions">
-        <input v-model="selectedMonth" class="month-input" type="month" />
+        <label class="topbar-field">
+          <span>月份</span>
+          <input v-model="selectedMonth" class="month-input" type="month" />
+        </label>
         <button class="primary-button" type="button" :disabled="saving" @click="createMonthlyInvoices">
           {{ saving ? '建立中' : '建立本月帳單' }}
         </button>
@@ -200,13 +203,13 @@
 
       <Teleport to="body">
         <div v-if="editingInvoiceId" class="modal-backdrop" @click.self="cancelInvoiceEdit">
-          <section class="modal-panel">
+          <section class="modal-panel" role="dialog" aria-modal="true" aria-label="修改帳單">
             <div class="panel-header compact">
               <div>
                 <h2>修改帳單</h2>
                 <p>{{ editingInvoiceTitle }}</p>
               </div>
-              <button class="icon-button" type="button" @click="cancelInvoiceEdit">×</button>
+              <button class="icon-button" type="button" aria-label="關閉修改帳單視窗" @click="cancelInvoiceEdit">×</button>
             </div>
 
             <form class="entity-form modal-form" @submit.prevent="updateInvoice">
@@ -248,13 +251,13 @@
 
       <Teleport to="body">
         <div v-if="receivingRow" class="modal-backdrop" @click.self="cancelReceiveRent">
-          <section class="modal-panel">
+          <section class="modal-panel" role="dialog" aria-modal="true" aria-label="收租">
             <div class="panel-header compact">
               <div>
                 <h2>收租</h2>
                 <p>{{ receivingRow.unitNo || receivingRow.address }} / {{ receivingRow.tenantName }}</p>
               </div>
-              <button class="icon-button" type="button" @click="cancelReceiveRent">×</button>
+              <button class="icon-button" type="button" aria-label="關閉收租視窗" @click="cancelReceiveRent">×</button>
             </div>
 
             <form class="entity-form modal-form" @submit.prevent="submitRentPayment">

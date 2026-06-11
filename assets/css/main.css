@@ -61,6 +61,31 @@ input::placeholder {
   color: #64748b;
 }
 
+a,
+button,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
 .app-shell {
   display: grid;
   grid-template-columns: 220px minmax(0, 1fr);
@@ -204,6 +229,22 @@ input::placeholder {
 .filter-row,
 .row-actions {
   gap: 8px;
+}
+
+.topbar-field {
+  display: grid;
+  gap: 6px;
+  min-width: 132px;
+}
+
+.topbar-field span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.topbar-field .month-input {
+  width: 100%;
 }
 
 .row-actions {
@@ -445,7 +486,7 @@ h2 {
 
 .filter-field input,
 .filter-field select {
-  min-height: 42px;
+  min-height: 44px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--surface);
@@ -454,7 +495,7 @@ h2 {
 }
 
 .filter {
-  min-height: 42px;
+  min-height: 44px;
   padding: 0 16px;
   color: var(--muted);
   font-weight: 700;
@@ -569,6 +610,13 @@ td span {
 
 .inline-action {
   padding: 0 12px;
+}
+
+@media (pointer: coarse) {
+  .text-button,
+  .danger-button {
+    min-height: 44px;
+  }
 }
 
 .quick-actions {
@@ -959,6 +1007,25 @@ td span {
     flex-wrap: wrap;
   }
 
+  .page-heading > .sticky-page-action,
+  .page-heading > .topbar-actions {
+    width: 100%;
+  }
+
+  .page-heading > .topbar-actions > * {
+    flex: 1 1 100%;
+  }
+
+  .filter-bar {
+    align-items: stretch;
+  }
+
+  .filter-bar > .filter-field,
+  .filter-bar > .secondary-button {
+    width: 100%;
+    min-width: 0;
+  }
+
   h1 {
     font-size: 24px;
   }
@@ -1047,6 +1114,11 @@ td span {
     color: #fff;
   }
 
+  .mobile-tab.active .mobile-tab-icon {
+    background: rgba(96, 165, 250, 0.24);
+    color: #fff;
+  }
+
   .mobile-tab-icon {
     display: grid;
     place-items: center;
@@ -1130,6 +1202,13 @@ td span {
   .mobile-menu-item.active {
     border-color: #3b82f6;
     background: var(--blue-soft);
+    box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.45);
+    color: #fff;
+  }
+
+  .mobile-menu-item.active .nav-icon {
+    background: rgba(96, 165, 250, 0.24);
+    color: #fff;
   }
 
   .mobile-menu-footer {

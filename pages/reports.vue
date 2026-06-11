@@ -6,7 +6,10 @@
         <h1>租金收入報表</h1>
       </div>
       <div class="topbar-actions">
-        <input v-model="selectedYear" class="month-input year-input" type="number" min="2000" max="2100" />
+        <label class="topbar-field">
+          <span>年度</span>
+          <input v-model="selectedYear" class="month-input year-input" type="number" min="2000" max="2100" />
+        </label>
         <button class="primary-button" type="button" :disabled="loading || reportRows.length === 0" @click="exportCsv">
           匯出 CSV
         </button>
@@ -76,9 +79,25 @@
           <button class="secondary-button" type="button" @click="clearFilters">清除篩選</button>
         </div>
 
-        <p v-if="error" class="error-text">{{ error }}</p>
-        <p v-if="loading" class="empty-text">資料載入中...</p>
-        <p v-else-if="filteredReportRows.length === 0" class="empty-text">目前沒有符合條件的年度收入資料。</p>
+        <section v-if="error" class="state-panel error-panel" aria-live="polite">
+          <strong>年度報表暫時無法顯示</strong>
+          <p>{{ error }}</p>
+          <button class="secondary-button" type="button" @click="loadReport">重新整理</button>
+        </section>
+
+        <section v-else-if="loading" class="state-panel" aria-live="polite">
+          <strong>資料載入中</strong>
+          <p>系統正在彙整 {{ selectedYear }} 年的已收租金資料。</p>
+        </section>
+
+        <section v-else-if="filteredReportRows.length === 0" class="state-panel" aria-live="polite">
+          <strong>目前沒有符合條件的年度收入資料</strong>
+          <p>{{ ownerFilter || buildingFilter ? '可以先清除篩選條件，再查看完整年度報表。' : '請先確認該年度是否已有租金付款紀錄。' }}</p>
+          <div class="state-actions">
+            <button v-if="ownerFilter || buildingFilter" class="secondary-button" type="button" @click="clearFilters">清除篩選</button>
+            <button class="secondary-button" type="button" @click="loadReport">重新整理</button>
+          </div>
+        </section>
 
         <div v-else class="table-wrap">
           <table class="report-table">
