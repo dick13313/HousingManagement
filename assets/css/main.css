@@ -309,7 +309,9 @@ textarea:disabled {
 }
 
 .primary-link,
-.quick-button {
+.quick-button,
+.breadcrumb-link,
+.topbar-back-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -328,6 +330,23 @@ textarea:disabled {
 
 .secondary-button {
   background: transparent;
+}
+
+.breadcrumb-link,
+.topbar-back-link {
+  min-height: 46px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--surface-raised);
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.breadcrumb-link:hover,
+.topbar-back-link:hover {
+  background: var(--surface-strong);
 }
 
 .danger-button {
@@ -614,8 +633,14 @@ td span {
 
 @media (pointer: coarse) {
   .text-button,
-  .danger-button {
+  .danger-button,
+  .breadcrumb-link,
+  .topbar-back-link {
     min-height: 44px;
+  }
+
+  .inline-action {
+    min-width: 44px;
   }
 }
 
@@ -837,7 +862,7 @@ td span {
 }
 
 .cycle-button {
-  min-height: 42px;
+  min-height: 46px;
   padding: 0 14px;
 }
 
@@ -944,6 +969,25 @@ td span {
   flex-shrink: 0;
 }
 
+.page-breadcrumbs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.breadcrumb-separator {
+  color: #64748b;
+}
+
+.breadcrumb-current {
+  color: var(--ink);
+  font-weight: 700;
+}
+
 .chart-ring {
   display: grid;
   place-items: center;
@@ -1007,6 +1051,14 @@ td span {
     flex-wrap: wrap;
   }
 
+  .topbar-actions {
+    width: 100%;
+  }
+
+  .topbar-actions > * {
+    flex: 1 1 100%;
+  }
+
   .page-heading > .sticky-page-action,
   .page-heading > .topbar-actions {
     width: 100%;
@@ -1021,9 +1073,27 @@ td span {
   }
 
   .filter-bar > .filter-field,
-  .filter-bar > .secondary-button {
+  .filter-bar > .secondary-button,
+  .filter-bar > .primary-button,
+  .filter-bar > .filter,
+  .topbar-field,
+  .topbar-back-link {
     width: 100%;
     min-width: 0;
+  }
+
+  .filter-field,
+  .topbar-field {
+    gap: 8px;
+  }
+
+  .filter-field input,
+  .filter-field select,
+  .form-field input,
+  .form-field select,
+  .form-field textarea,
+  .month-input {
+    font-size: 16px;
   }
 
   h1 {
@@ -1044,6 +1114,18 @@ td span {
 
   .panel {
     padding: 14px;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+    padding: 12px 12px calc(92px + env(safe-area-inset-bottom));
+  }
+
+  .modal-panel {
+    width: 100%;
+    max-height: min(82vh, 760px);
+    padding: 18px;
+    border-radius: 14px;
   }
 
   .entity-form {
@@ -1075,6 +1157,20 @@ td span {
     position: sticky;
     bottom: calc(82px + env(safe-area-inset-bottom));
     z-index: 20;
+  }
+
+  .page-breadcrumbs {
+    gap: 6px;
+    font-size: 13px;
+  }
+
+  .cycle-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .cycle-button {
+    width: 100%;
   }
 
   .mobile-tabbar {

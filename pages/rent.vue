@@ -9,8 +9,16 @@
       <div class="topbar-actions">
         <label class="topbar-field">
           <span>月份</span>
-          <input v-model="selectedMonth" class="month-input" type="month" />
+          <input v-model="selectedMonth" class="month-input" type="month" aria-label="選擇收租月份" />
         </label>
+        <button
+          v-if="selectedMonth !== currentMonthValue"
+          class="secondary-button"
+          type="button"
+          @click="resetToCurrentMonth"
+        >
+          回到本月
+        </button>
         <button class="primary-button" type="button" :disabled="saving" @click="createMonthlyInvoices">
           {{ saving ? '建立中' : '建立本月帳單' }}
         </button>
@@ -59,7 +67,7 @@
         <div class="filter-bar">
           <label class="filter-field">
             <span>屋主</span>
-            <select v-model="ownerFilter">
+            <select v-model="ownerFilter" aria-label="屋主篩選">
               <option value="">全部</option>
               <option v-for="option in owners" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -68,7 +76,7 @@
           </label>
           <label class="filter-field">
             <span>社區</span>
-            <select v-model="buildingFilter">
+            <select v-model="buildingFilter" aria-label="社區篩選">
               <option value="">全部</option>
               <option v-for="option in buildings" :key="option.value" :value="option.value">
                 {{ option.label }}
@@ -148,8 +156,8 @@
             </article>
           </div>
 
-          <div class="table-wrap rent-table-wrap">
-            <table class="rent-table">
+          <div class="table-wrap rent-table-wrap desktop-table-wrap">
+            <table class="rent-table" aria-label="收租資料表">
               <thead>
                 <tr>
                   <th>房屋 / 社區</th>
@@ -203,10 +211,10 @@
 
       <Teleport to="body">
         <div v-if="editingInvoiceId" class="modal-backdrop" @click.self="cancelInvoiceEdit">
-          <section class="modal-panel" role="dialog" aria-modal="true" aria-label="修改帳單">
+          <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="edit-invoice-title">
             <div class="panel-header compact">
               <div>
-                <h2>修改帳單</h2>
+                <h2 id="edit-invoice-title">修改帳單</h2>
                 <p>{{ editingInvoiceTitle }}</p>
               </div>
               <button class="icon-button" type="button" aria-label="關閉修改帳單視窗" @click="cancelInvoiceEdit">×</button>
@@ -215,11 +223,11 @@
             <form class="entity-form modal-form" @submit.prevent="updateInvoice">
               <label class="form-field">
                 <span>應繳金額</span>
-                <input v-model="invoiceForm.amount_due" type="number" required />
+                <input v-model="invoiceForm.amount_due" type="number" inputmode="decimal" step="any" min="0" required />
               </label>
               <label class="form-field">
                 <span>已繳金額</span>
-                <input v-model="invoiceForm.amount_paid" type="number" required />
+                <input v-model="invoiceForm.amount_paid" type="number" inputmode="decimal" step="any" min="0" required />
               </label>
               <label class="form-field">
                 <span>到期日</span>
@@ -251,10 +259,10 @@
 
       <Teleport to="body">
         <div v-if="receivingRow" class="modal-backdrop" @click.self="cancelReceiveRent">
-          <section class="modal-panel" role="dialog" aria-modal="true" aria-label="收租">
+          <section class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="receive-rent-title">
             <div class="panel-header compact">
               <div>
-                <h2>收租</h2>
+                <h2 id="receive-rent-title">收租</h2>
                 <p>{{ receivingRow.unitNo || receivingRow.address }} / {{ receivingRow.tenantName }}</p>
               </div>
               <button class="icon-button" type="button" aria-label="關閉收租視窗" @click="cancelReceiveRent">×</button>
@@ -279,7 +287,7 @@
 
               <label class="form-field">
                 <span>自訂月數</span>
-                <input v-model.number="rentPaymentForm.months" type="number" min="1" max="36" required />
+                <input v-model.number="rentPaymentForm.months" type="number" min="1" max="36" step="1" inputmode="numeric" required />
               </label>
               <label class="form-field">
                 <span>付款日期</span>
@@ -405,6 +413,7 @@ const paymentMethods = [
   { label: '其他', value: 'other' }
 ]
 
+const currentMonthValue = toMonthInputValue(new Date())
 const monthStart = computed(() => `${selectedMonth.value}-01`)
 const monthLabel = computed(() => selectedMonth.value.replace('-', ' 年 ') + ' 月')
 const paymentMonths = computed(() => sanitizePaymentMonths(rentPaymentForm.months))
@@ -551,6 +560,10 @@ function isMissingPaymentCycleColumn(message = '') {
 function clearRentFilters() {
   ownerFilter.value = ''
   buildingFilter.value = ''
+}
+
+function resetToCurrentMonth() {
+  selectedMonth.value = currentMonthValue
 }
 
 function editInvoice(row: RentOverviewRow) {

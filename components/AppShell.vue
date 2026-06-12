@@ -31,9 +31,15 @@
           <p class="eyebrow topbar-eyebrow">{{ currentNavItem.label }}</p>
           <h1 class="topbar-title">{{ pageTitle }}</h1>
           <p class="topbar-caption">{{ pageCaption }}</p>
+          <nav v-if="route.path !== '/'" class="page-breadcrumbs" aria-label="頁面路徑">
+            <NuxtLink class="breadcrumb-link" to="/">首頁</NuxtLink>
+            <span class="breadcrumb-separator" aria-hidden="true">/</span>
+            <span class="breadcrumb-current">{{ currentNavItem.label }}</span>
+          </nav>
         </section>
 
         <div class="topbar-actions">
+          <NuxtLink v-if="route.path !== '/'" class="topbar-back-link" to="/">回首頁</NuxtLink>
           <div class="topbar-badge" aria-label="今日日期">{{ todayLabel }}</div>
           <NuxtLink v-if="!user" class="user-button user-link" to="/login">登入</NuxtLink>
           <button v-else class="user-button" type="button" @click="signOut">
