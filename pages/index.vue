@@ -92,8 +92,8 @@
             </article>
           </div>
 
-          <div class="table-wrap">
-            <table>
+          <div class="table-wrap desktop-table-wrap">
+            <table aria-label="未繳帳款資料表">
               <thead>
                 <tr>
                   <th>租客</th>

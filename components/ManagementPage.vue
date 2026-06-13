@@ -34,7 +34,7 @@
       <div v-if="filters.length" class="filter-bar">
         <label v-for="filter in filters" :key="filter.key" class="filter-field">
           <span>{{ filter.label }}</span>
-          <select v-model="selectedFilters[filter.key]">
+          <select v-model="selectedFilters[filter.key]" :aria-label="`${filter.label} 篩選`">
             <option value="">全部</option>
             <option v-for="option in filter.options" :key="option.value" :value="option.value">
               {{ option.label }}
@@ -102,7 +102,7 @@
         </div>
 
         <div class="table-wrap desktop-table-wrap">
-          <table>
+          <table :aria-label="`${listTitle}資料表`">
             <thead>
               <tr>
                 <th v-for="column in columns" :key="column.key" :class="{ amount: column.align === 'right' }">
@@ -159,24 +159,32 @@
           </div>
 
           <form class="entity-form modal-form" @submit.prevent="submit">
-            <label v-for="field in fields" :key="field.key" class="form-field">
+            <label v-for="field in fields" :key="field.key" class="form-field" :for="fieldId(field.key)">
               <span>
                 {{ field.label }}
                 <em v-if="field.required" class="required-mark" aria-hidden="true">*</em>
               </span>
-              <small v-if="field.helpText" class="field-help">{{ field.helpText }}</small>
+              <small v-if="field.helpText" :id="fieldHelpId(field.key)" class="field-help">{{ field.helpText }}</small>
 
               <textarea
                 v-if="field.type === 'textarea'"
+                :id="fieldId(field.key)"
                 v-model="form[field.key]"
+                :name="field.key"
                 :required="field.required"
                 :placeholder="field.placeholder"
+                :aria-required="field.required ? 'true' : undefined"
+                :aria-describedby="field.helpText ? fieldHelpId(field.key) : undefined"
               />
 
               <select
                 v-else-if="field.type === 'select'"
+                :id="fieldId(field.key)"
                 v-model="form[field.key]"
+                :name="field.key"
                 :required="field.required"
+                :aria-required="field.required ? 'true' : undefined"
+                :aria-describedby="field.helpText ? fieldHelpId(field.key) : undefined"
               >
                 <option value="">請選擇</option>
                 <option v-for="option in field.options || []" :key="option.value" :value="option.value">
@@ -186,12 +194,18 @@
 
               <input
                 v-else
+                :id="fieldId(field.key)"
                 v-model="form[field.key]"
+                :name="field.key"
                 :type="field.type || 'text'"
                 :required="field.required"
                 :placeholder="field.placeholder"
                 :autocomplete="field.autocomplete || defaultAutocomplete(field)"
                 :inputmode="field.inputmode || defaultInputMode(field)"
+                :aria-required="field.required ? 'true' : undefined"
+                :aria-describedby="field.helpText ? fieldHelpId(field.key) : undefined"
+                :step="field.valueType === 'number' ? 'any' : undefined"
+                :enterkeyhint="isLastField(field.key) ? 'done' : 'next'"
               />
             </label>
 
@@ -369,6 +383,18 @@ function defaultInputMode(field: FormField) {
   if (field.type === 'tel') return 'tel'
   if (field.type === 'number') return 'decimal'
   return 'text'
+}
+
+function fieldId(key: string) {
+  return `${props.table}-${key}`
+}
+
+function fieldHelpId(key: string) {
+  return `${fieldId(key)}-help`
+}
+
+function isLastField(key: string) {
+  return props.fields[props.fields.length - 1]?.key === key
 }
 
 function getPathValues(row: Record<string, any>, path: string) {
