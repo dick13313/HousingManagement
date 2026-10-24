@@ -14,6 +14,9 @@ export type FormField = {
   helpText?: string
   autocomplete?: string
   inputmode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search'
+  minlength?: number
+  maxlength?: number
+  pattern?: string
 }
 
 export type TableColumn = {

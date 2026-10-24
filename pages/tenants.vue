@@ -1,7 +1,7 @@
 <template>
   <ManagementPage
     title="租客管理"
-    subtitle="管理租客聯絡資訊、LINE 與緊急聯絡資料。"
+    subtitle="管理租客聯絡資訊、轉帳帳戶後五碼與緊急聯絡資料。"
     list-title="租客列表"
     action-label="新增租客"
     table="tenants"
@@ -22,6 +22,17 @@ const fields: FormField[] = [
   { key: 'phone', label: '電話', type: 'tel' },
   { key: 'email', label: 'Email', type: 'email' },
   { key: 'line_id', label: 'LINE ID' },
+  {
+    key: 'bank_account_last5',
+    label: '轉帳帳戶後五碼',
+    required: true,
+    placeholder: '例如：12345',
+    helpText: '只需記錄帳戶最後 5 碼，供收到轉帳後快速查找租客。',
+    inputmode: 'numeric',
+    minlength: 5,
+    maxlength: 5,
+    pattern: '[0-9]{5}'
+  },
   { key: 'identity_no', label: '身分證字號' },
   { key: 'emergency_contact', label: '緊急聯絡人' },
   { key: 'notes', label: '備註', type: 'textarea' }
@@ -32,6 +43,7 @@ const columns: TableColumn[] = [
   { key: 'leases', label: '承租房屋', format: (row) => activeLeaseProperty(row) },
   { key: 'leases', label: '月租金', align: 'right', format: (row) => activeLeaseRent(row) },
   { key: 'phone', label: '電話' },
+  { key: 'bank_account_last5', label: '帳戶後五碼', format: (row) => row.bank_account_last5 || '未登記' },
   { key: 'line_id', label: 'LINE' },
   { key: 'emergency_contact', label: '緊急聯絡人' }
 ]

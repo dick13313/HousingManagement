@@ -55,6 +55,55 @@
         </article>
       </section>
 
+      <section class="panel transfer-search-panel">
+        <div class="panel-header">
+          <div>
+            <h2>轉帳後五碼查帳</h2>
+            <p>輸入銀行入帳紀錄的後 5 碼，找到租客後即可登記收租。</p>
+          </div>
+        </div>
+
+        <form class="transfer-search-form" @submit.prevent="searchTransferAccount">
+          <label class="filter-field transfer-search-field">
+            <span>帳戶後五碼</span>
+            <input
+              v-model="accountLast5Input"
+              type="text"
+              inputmode="numeric"
+              pattern="[0-9]{5}"
+              minlength="5"
+              maxlength="5"
+              placeholder="請輸入 5 位數字"
+              required
+              @input="normalizeAccountLast5"
+            />
+          </label>
+          <button class="primary-button" type="submit">查詢租客</button>
+          <button v-if="accountSearchSubmitted" class="secondary-button" type="button" @click="clearAccountSearch">
+            清除
+          </button>
+        </form>
+
+        <p v-if="accountSearchError" class="error-text">{{ accountSearchError }}</p>
+
+        <div v-if="accountSearchSubmitted && accountMatches.length" class="transfer-match-list">
+          <article v-for="row in accountMatches" :key="`transfer-${row.leaseId}`" class="transfer-match-card">
+            <div>
+              <strong>{{ row.tenantName }}</strong>
+              <span>{{ row.unitNo || row.address }}・{{ row.buildingName || '未指定社區' }}</span>
+              <small>帳戶後五碼：{{ row.bankAccountLast5 }}</small>
+            </div>
+            <button class="primary-button" type="button" :disabled="saving" @click="openReceiveRent(row, true)">
+              登記收租
+            </button>
+          </article>
+        </div>
+
+        <p v-else-if="accountSearchSubmitted && !accountSearchError" class="empty-text transfer-empty">
+          找不到使用此後五碼的在租租客，請先到「租客管理」確認帳戶資料。
+        </p>
+      </section>
+
       <section class="panel">
         <div class="panel-header">
           <div>
@@ -335,7 +384,7 @@ type LeaseRow = {
   monthly_rent: number
   rent_due_day: number
   payment_cycle_months?: number
-  tenants?: { name?: string }
+  tenants?: { name?: string; bank_account_last5?: string }
   properties?: {
     unit_no?: string
     address?: string
@@ -367,6 +416,7 @@ type RentOverviewRow = {
   ownerName: string
   ownerId: string
   tenantName: string
+  bankAccountLast5: string
   monthlyRent: number
   paymentCycleMonths: number
   amountDue: number
@@ -384,6 +434,10 @@ const { owners, buildings } = useReferenceOptions()
 const selectedMonth = ref(toMonthInputValue(new Date()))
 const ownerFilter = ref('')
 const buildingFilter = ref('')
+const accountLast5Input = ref('')
+const searchedAccountLast5 = ref('')
+const accountSearchSubmitted = ref(false)
+const accountSearchError = ref('')
 const rentRows = ref<RentOverviewRow[]>([])
 const loading = ref(false)
 const saving = ref(false)
@@ -450,6 +504,11 @@ const activeFilterSummary = computed(() => {
   }
 
   return `已套用 ${parts.join('、')}，目前顯示 ${filteredRentRows.value.length} 筆資料。`
+})
+
+const accountMatches = computed(() => {
+  if (!accountSearchSubmitted.value || !searchedAccountLast5.value) return []
+  return rentRows.value.filter((row) => row.bankAccountLast5 === searchedAccountLast5.value)
 })
 
 const summary = computed(() => {
@@ -520,6 +579,7 @@ async function loadRentOverview() {
       ownerName: property.owners?.name || '',
       ownerId: property.owner_id || '',
       tenantName: lease.tenants?.name || '未指定租客',
+      bankAccountLast5: lease.tenants?.bank_account_last5 || '',
       monthlyRent: lease.monthly_rent,
       paymentCycleMonths: lease.payment_cycle_months || 1,
       amountDue: invoice?.amount_due ?? lease.monthly_rent,
@@ -535,10 +595,10 @@ async function loadRentOverview() {
 async function loadActiveLeases() {
   if (!client) return { data: [], error: null }
 
-  const baseSelect = 'id, monthly_rent, rent_due_day, tenants(name), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))'
+  const baseSelect = 'id, monthly_rent, rent_due_day, tenants(name, bank_account_last5), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))'
   const withPaymentCycle = await client
     .from('leases')
-    .select(`id, monthly_rent, rent_due_day, payment_cycle_months, tenants(name), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))`)
+    .select(`id, monthly_rent, rent_due_day, payment_cycle_months, tenants(name, bank_account_last5), properties(unit_no, address, owner_id, building_id, buildings(name), owners(name))`)
     .eq('status', 'active')
     .order('created_at', { ascending: true })
 
@@ -564,6 +624,33 @@ function clearRentFilters() {
 
 function resetToCurrentMonth() {
   selectedMonth.value = currentMonthValue
+}
+
+function normalizeAccountLast5(event: Event) {
+  const input = event.target as HTMLInputElement
+  accountLast5Input.value = input.value.replace(/\D/g, '').slice(0, 5)
+  accountSearchSubmitted.value = false
+  accountSearchError.value = ''
+}
+
+function searchTransferAccount() {
+  const accountLast5 = accountLast5Input.value.trim()
+  if (!/^\d{5}$/.test(accountLast5)) {
+    accountSearchError.value = '請輸入完整的 5 位數字。'
+    accountSearchSubmitted.value = false
+    return
+  }
+
+  searchedAccountLast5.value = accountLast5
+  accountSearchError.value = ''
+  accountSearchSubmitted.value = true
+}
+
+function clearAccountSearch() {
+  accountLast5Input.value = ''
+  searchedAccountLast5.value = ''
+  accountSearchSubmitted.value = false
+  accountSearchError.value = ''
 }
 
 function editInvoice(row: RentOverviewRow) {
@@ -611,12 +698,14 @@ async function updateInvoice() {
   await loadRentOverview()
 }
 
-function openReceiveRent(row: RentOverviewRow) {
+function openReceiveRent(row: RentOverviewRow, matchedByAccount = false) {
   receivingRow.value = row
   rentPaymentForm.months = row.paymentCycleMonths || 1
   rentPaymentForm.paid_on = todayDate()
   rentPaymentForm.method = 'bank_transfer'
-  rentPaymentForm.notes = ''
+  rentPaymentForm.notes = matchedByAccount
+    ? `依轉帳帳戶後五碼 ${row.bankAccountLast5} 查帳確認`
+    : ''
 }
 
 function cancelReceiveRent() {

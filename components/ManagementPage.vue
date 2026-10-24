@@ -206,6 +206,9 @@
                 :aria-describedby="field.helpText ? fieldHelpId(field.key) : undefined"
                 :step="field.valueType === 'number' ? 'any' : undefined"
                 :enterkeyhint="isLastField(field.key) ? 'done' : 'next'"
+                :minlength="field.minlength"
+                :maxlength="field.maxlength"
+                :pattern="field.pattern"
               />
             </label>
 

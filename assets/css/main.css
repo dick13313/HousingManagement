@@ -491,6 +491,53 @@ h2 {
   background: var(--surface-raised);
 }
 
+.transfer-search-panel {
+  margin-bottom: 20px;
+}
+
+.transfer-search-form {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.transfer-search-field {
+  flex: 1 1 260px;
+}
+
+.transfer-match-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.transfer-match-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised);
+}
+
+.transfer-match-card div {
+  display: grid;
+  gap: 4px;
+}
+
+.transfer-match-card span,
+.transfer-match-card small {
+  color: var(--muted);
+}
+
+.transfer-empty {
+  margin-top: 16px;
+  margin-bottom: 0;
+}
+
 .filter-field {
   display: grid;
   gap: 6px;
